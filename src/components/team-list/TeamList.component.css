@@ -1,0 +1,26 @@
+.team-logo{
+  width: 20px;
+  height: 20px;
+}
+
+.pagination-controls-container button{
+  margin: 10px;
+}
+
+.star-container{
+  cursor: pointer;
+}
+
+.sort-options-container{
+  display: flex;
+  align-items: center;
+}
+
+.btn:focus, .btn:active:focus, .btn.active:focus{
+  outline:none;
+  box-shadow:none;
+}
+
+.sort-by{
+  color: #888;
+}
