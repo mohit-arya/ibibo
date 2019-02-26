@@ -9,7 +9,7 @@ export default class TeamListContainer extends Component {
     teamsPerPage: 10,
     currentPageNum: 1,
     teams: [],
-    teamsCount: null,
+    teamsCount: 0,
     favourites: [],
     selectedView: ALL_TEAMS_VIEW,
     sortBy: null,
@@ -17,15 +17,15 @@ export default class TeamListContainer extends Component {
   }
 
   componentDidMount = async () => {
+    await Database.init();
     const isDBPopulated = await this.isTeamListInDB();
     if (!isDBPopulated) {
       await this.fetchAndStoreTeamList();
     }
-    this.getTeamsFromDb();
+    this.updateComponentState();
   }
 
   isTeamListInDB = async () => {
-    await Database.init();
     const count = await Database.getTeamsCount();
     return count > 0;
   }
@@ -33,15 +33,14 @@ export default class TeamListContainer extends Component {
   fetchAndStoreTeamList = async () => {
     const res = await fetch(TEAM_LIST_API_URL);
     const teamList = await res.json();
-    Database.insertTeams(teamList);
+    await Database.insertTeams(teamList);
   }
 
   getTeamsFromDb = async () => {
     const { currentPageNum, teamsPerPage, sortBy, sortOrder } = this.state;
     const startIndex = teamsPerPage * (currentPageNum - 1) + 1;
     const teams = await Database.getTeams(startIndex, teamsPerPage, sortBy, sortOrder);
-    const teamsCount = await Database.getTeamsCount();
-    this.setState({ teams, teamsCount });
+    return teams;
   }
 
   onNextClick = async () => {
@@ -50,7 +49,7 @@ export default class TeamListContainer extends Component {
       this.setState({
         currentPageNum: currentPageNum + 1
       }, () => {
-        this.getTeamsFromDb();
+        this.updateComponentState();
       });
     }
   }
@@ -61,9 +60,15 @@ export default class TeamListContainer extends Component {
       this.setState({
         currentPageNum: currentPageNum - 1
       }, () => {
-        this.getTeamsFromDb();
+        this.updateComponentState();
       });
     }
+  }
+
+  updateComponentState = async () => {
+    const teamsCount = await Database.getTeamsCount();
+    const teams = await this.getTeamsFromDb();
+    this.setState({ teams, teamsCount });
   }
 
   toggleFavourites = (team) => {
@@ -104,7 +109,7 @@ export default class TeamListContainer extends Component {
       sortOrder,
       currentPageNum: 1
     }, () => {
-      this.getTeamsFromDb();
+      this.updateComponentState();
     })
   }
 
